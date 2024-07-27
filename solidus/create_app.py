@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from .config import config
 from .include_routers import include_routers
 from .app_middlewares import add_cors_middleware, add_log_middleware
+from .database import get_db
 
 
 def create_app(title, lifespan, docs_url, redoc_url) -> FastAPI:
@@ -13,6 +14,9 @@ def create_app(title, lifespan, docs_url, redoc_url) -> FastAPI:
         redoc_url=redoc_url,
     )
 
+    # create db
+    get_db()
+    
     # Include routers to app
     include_routers(app)
 
