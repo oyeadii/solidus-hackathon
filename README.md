@@ -35,7 +35,19 @@ This repository contains the backend code for the Solidus Hackathon project, bui
 ## Environment Variables
 
 ```
-$ CONFIG='{"ENVI":"DEV","PYTHON_HOST": "localhost","PYTHON_USE_HTTPS": false,"PYTHON_PORT": 8888,"MODEL_NAME": "<model_want_to_use>","API_KEY":"<model_api_key>","PYTHON_TOKEN":<jupyter_notebook_token_here>}'
+$ CONFIG='{
+  "ENVI": "DEV",
+  "PYTHON_HOST": "localhost",
+  "PYTHON_USE_HTTPS": false,
+  "PYTHON_PORT": 8888,
+  "MODEL_NAME": "<model_want_to_use>",
+  "API_KEY": "<model_api_key>",
+  "PYTHON_TOKEN":<jupyter_notebook_token_here>,
+  "AWS_ACCESS_KEY_ID": "<your_aws_access_key_id>",
+  "AWS_SECRET_ACCESS_KEY": "<your_aws_secret_access_key>",
+  "AWS_REGION_NAME": "<your_aws_region_name>",
+  "AWS_STORAGE_BUCKET_NAME": "<your_aws_storage_bucket_name>"
+}'
 ``` 
 
 ## Setting Up a Jupyter Notebook Client
