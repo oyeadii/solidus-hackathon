@@ -96,29 +96,28 @@ async def create_task(
         return response
 
 
-@router.post("/result")
+@router.post("/result/{task_id}")
 async def get_result(
-    request: ResultRequest,
+    task_id: str,
     x_marketplace_token: str = Header(...),
     x_user_id: str = Header(...),
     x_user_role: str = Header(...),
-    db=Depends(get_db),
+    db=Depends(get_db)
 ):
     try:
-        task_id = request.taskId
 
-        cursor = db.cursor()
-        cursor.execute('SELECT * FROM tasks WHERE id=?', (task_id,))
-        task = cursor.fetchone()
-
+        task = db.query(Task).filter(Task.id == task_id).first()
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
-
+        
         timestamp = datetime.datetime.utcnow().isoformat()
-        created_at = datetime.datetime.fromisoformat(task[2])
+        if isinstance(task.created_at, str):
+            created_at = datetime.datetime.fromisoformat(task.created_at)
+        else:
+            created_at = task.created_at
         processing_duration = (datetime.datetime.utcnow() - created_at).total_seconds()
 
-        status = task[1]
+        status = task.status
 
         if status == "pending":
             error_code = {"status": "AC_001", "reason": "pending"}
@@ -126,9 +125,9 @@ async def get_result(
         elif status == "in progress":
             error_code = {"status": "AC_002", "reason": "in progress"}
             response_data = {"taskId": task_id}
-        elif status == "success":
+        elif status == "completed":
             # Placeholder for actual result data retrieval
-            result_data = "Result data or S3 link"
+            result_data = task.output
             error_code = {"status": "AC_000", "reason": "success"}
             response_data = {"dataType": "S3_OBJECT", "data": result_data}
         elif status == "failed":
@@ -136,10 +135,10 @@ async def get_result(
             response_data = {"taskId": task_id}
         else:
             raise HTTPException(status_code=500, detail="Unknown task status")
-
+        
         response = ResultResponse(
-            apiVersion="1.0.1",
-            service="AudioCraft",
+            apiVersion="0.1.0",
+            service="P&L Analyser",
             datetime=timestamp,
             processDuration=processing_duration if status != "pending" else None,
             isResponseImmediate=False,
@@ -147,8 +146,8 @@ async def get_result(
             response=response_data,
             errorCode=error_code,
         )
-
-        return response
+        
+        return {'response':response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
