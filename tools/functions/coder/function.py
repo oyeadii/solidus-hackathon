@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List
 from typing_extensions import override
 
-from autogen.coding import CodeBlock
 from autogen.coding.jupyter import (
     JupyterCodeExecutor,
     JupyterConnectionInfo,
