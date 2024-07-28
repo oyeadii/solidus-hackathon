@@ -63,5 +63,5 @@ class ToolMetadata:
                 "name": self.name,
                 "description": self.description,
                 "parameters": self.get_parameters_dict(),
-                }
+            },
         }

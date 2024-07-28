@@ -13,8 +13,10 @@ class CallResponse(BaseModel):
     response: Dict
     errorCode: Dict
 
+
 class ResultRequest(BaseModel):
     taskId: str
+
 
 class ResultResponse(BaseModel):
     apiVersion: str
@@ -26,12 +28,14 @@ class ResultResponse(BaseModel):
     response: Dict
     errorCode: Dict
 
+
 class StatsResponse(BaseModel):
     apiVersion: str
     service: str
     datetime: str
     response: Dict
     errorCode: Dict
+
 
 class CallbackRequest(BaseModel):
     apiVersion: str

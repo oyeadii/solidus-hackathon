@@ -11,6 +11,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+
 class Task(Base):
     __tablename__ = 'tasks'
     id = Column(String, primary_key=True, index=True)
@@ -22,11 +23,13 @@ class Task(Base):
     output = Column(String, index=True)
     error = Column(String, index=True)
 
+
 class Statistics(Base):
     __tablename__ = 'statistics'
     id = Column(Integer, primary_key=True)
     numRequestSuccess = Column(Integer, nullable=False, default=0)
     numRequestFailed = Column(Integer, nullable=False, default=0)
+
 
 # Dependency to get DB session
 def get_db():

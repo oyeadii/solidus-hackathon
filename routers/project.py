@@ -1,4 +1,14 @@
-from fastapi import APIRouter, HTTPException, Header, Request, Depends, UploadFile, File, BackgroundTasks, Form
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Header,
+    Request,
+    Depends,
+    UploadFile,
+    File,
+    BackgroundTasks,
+    Form,
+)
 from fastapi.responses import JSONResponse
 import uuid
 import datetime
@@ -28,7 +38,7 @@ async def create_task(
     x_request_id: str = Header(...),
     x_user_id: str = Header(...),
     x_user_role: str = Header(...),
-    db=Depends(get_db)
+    db=Depends(get_db),
 ):
     with handle_errors(request=request):
         trace_id = str(uuid.uuid4())
@@ -47,7 +57,7 @@ async def create_task(
             "x_marketplace_token": x_marketplace_token,
             "x_request_id": x_request_id,
             "x_user_id": x_user_id,
-            "x_user_role": x_user_role
+            "x_user_role": x_user_role,
         }
 
         # Insert task into the database
@@ -57,13 +67,19 @@ async def create_task(
             created_at=datetime.datetime.utcnow(),
             prompt=prompt,
             file_identifier=file_identifier,
-            headers=headers
+            headers=headers,
         )
         db.add(new_task)
         db.commit()
 
         # Add the background task
-        background_tasks.add_task(background_task, task_id=task_id, file_location=file_location, db=db, question=prompt)
+        background_tasks.add_task(
+            background_task,
+            task_id=task_id,
+            file_location=file_location,
+            db=db,
+            question=prompt,
+        )
 
         response = CallResponse(
             requestId=x_request_id,
@@ -74,7 +90,7 @@ async def create_task(
             isResponseImmediate=False,
             extraType="others",
             response={"taskId": task_id},
-            errorCode={"status": "AC_001", "reason": "pending"}
+            errorCode={"status": "AC_001", "reason": "pending"},
         )
 
         return response
@@ -86,7 +102,7 @@ async def get_result(
     x_marketplace_token: str = Header(...),
     x_user_id: str = Header(...),
     x_user_role: str = Header(...),
-    db=Depends(get_db)
+    db=Depends(get_db),
 ):
     try:
         task_id = request.taskId
@@ -129,7 +145,7 @@ async def get_result(
             isResponseImmediate=False,
             extraType="others",
             response=response_data,
-            errorCode=error_code
+            errorCode=error_code,
         )
 
         return response
@@ -143,7 +159,7 @@ async def get_stats(
     x_request_id: str = Header(...),
     x_user_id: str = Header(...),
     x_user_role: str = Header(...),
-    db=Depends(get_db)
+    db=Depends(get_db),
 ):
     try:
         cursor = db.cursor()
@@ -156,11 +172,8 @@ async def get_stats(
             apiVersion="1.0.1",
             service="AudioCraft",
             datetime=timestamp,
-            response={
-                "numRequestSuccess": stats[1],
-                "numRequestFailed": stats[2]
-            },
-            errorCode={"status": "AC_000", "reason": "success"}
+            response={"numRequestSuccess": stats[1], "numRequestFailed": stats[2]},
+            errorCode={"status": "AC_000", "reason": "success"},
         )
 
         return response
@@ -169,10 +182,7 @@ async def get_stats(
 
 
 @router.post("/upload")
-async def upload_object(
-    s3_key: str,
-    x_publisher_key: str = Header(...)
-):
+async def upload_object(s3_key: str, x_publisher_key: str = Header(...)):
     try:
         # Add logic to generate presigned URL for upload
         presigned_url = "https://example.com/presigned-url"
@@ -180,46 +190,28 @@ async def upload_object(
         return {
             "code": 0,
             "message": "success",
-            "data": {
-                "presignedUrl": presigned_url,
-                "key": s3_key
-            }
+            "data": {"presignedUrl": presigned_url, "key": s3_key},
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/download")
-async def download_object(
-    s3_key: str,
-    x_publisher_key: str = Header(...)
-):
+async def download_object(s3_key: str, x_publisher_key: str = Header(...)):
     try:
         # Add logic to generate presigned URL for download
         download_url = "https://example.com/download-url"
 
-        return {
-            "code": 0,
-            "message": "success",
-            "data": {
-                "url": download_url
-            }
-        }
+        return {"code": 0, "message": "success", "data": {"url": download_url}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/delete")
-async def delete_object(
-    s3_key: str,
-    x_publisher_key: str = Header(...)
-):
+async def delete_object(s3_key: str, x_publisher_key: str = Header(...)):
     try:
         # Add logic to delete object from S3
-        return {
-            "code": 0,
-            "message": "success"
-        }
+        return {"code": 0, "message": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -230,7 +222,7 @@ async def process_callback(
     x_marketplace_token: str = Header(...),
     x_request_id: str = Header(...),
     x_user_id: str = Header(...),
-    x_user_role: str = Header(...)
+    x_user_role: str = Header(...),
 ):
     try:
         # Here, you can add the logic to handle the callback
@@ -241,14 +233,22 @@ async def process_callback(
         status = request.errorCode["status"]
         if status == "AC_000":
             task_status = "success"
-            cursor.execute('UPDATE statistics SET numRequestSuccess = numRequestSuccess + 1 WHERE id = 1')
+            cursor.execute(
+                'UPDATE statistics SET numRequestSuccess = numRequestSuccess + 1 WHERE id = 1'
+            )
         else:
             task_status = "failed"
-            cursor.execute('UPDATE statistics SET numRequestFailed = numRequestFailed + 1 WHERE id = 1')
+            cursor.execute(
+                'UPDATE statistics SET numRequestFailed = numRequestFailed + 1 WHERE id = 1'
+            )
 
-        cursor.execute('UPDATE tasks SET status = ? WHERE id = ?', (task_status, task_id))
+        cursor.execute(
+            'UPDATE tasks SET status = ? WHERE id = ?', (task_status, task_id)
+        )
         db.commit()
 
-        return JSONResponse(status_code=201, content={"message": "Callback processed successfully"})
+        return JSONResponse(
+            status_code=201, content={"message": "Callback processed successfully"}
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

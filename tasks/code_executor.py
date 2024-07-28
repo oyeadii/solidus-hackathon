@@ -25,7 +25,10 @@ async def background_task(task_id: str, file_location: str, db: Session, questio
         output = ""
         base_gpt_helper = BaseGPT(tool_instances=tool_instances)
         print(f"Message Sent!!")
-        async for result in base_gpt_helper._make_ai_call(messages=messages, functions=functions,):
+        async for result in base_gpt_helper._make_ai_call(
+            messages=messages,
+            functions=functions,
+        ):
             if result == 'data: [DONE]\n\n':
                 break
 
@@ -35,7 +38,7 @@ async def background_task(task_id: str, file_location: str, db: Session, questio
                     output += str(chunk["content"])
                 else:
                     output = str(chunk["content"])
-        
+
         print(f"Output Recieved!!")
         task.output = output
         task.status = "completed"

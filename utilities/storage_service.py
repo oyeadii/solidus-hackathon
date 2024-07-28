@@ -21,10 +21,15 @@ class StorageService:
             's3',
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_secret_access_key,
-            region_name=self.aws_region_name
+            region_name=self.aws_region_name,
         )
 
-    def upload_image(self, image_base64: str, image_name: str, folder: Optional[str] = 'uploaded_images/') -> str:
+    def upload_image(
+        self,
+        image_base64: str,
+        image_name: str,
+        folder: Optional[str] = 'uploaded_images/',
+    ) -> str:
         """
         Uploads an image to an S3 bucket and returns the URL of the uploaded image.
 
@@ -44,19 +49,19 @@ class StorageService:
 
             # Define the S3 file path
             s3_file_path = folder + image_name
-            
+
             # Upload the image to S3
             self.s3_client.upload_fileobj(
                 BytesIO(image_data),
                 self.aws_storage_bucket_name,
                 s3_file_path,
-                ExtraArgs={'ContentType': content_type}
+                ExtraArgs={'ContentType': content_type},
             )
-            
+
             # Generate the file URL
             file_url = f"https://{self.aws_storage_bucket_name}.s3.amazonaws.com/{s3_file_path}"
             return file_url
-        
+
         except (NoCredentialsError, PartialCredentialsError) as e:
             raise HTTPException(status_code=500, detail=f"Credentials error: {str(e)}")
         except Exception as e:

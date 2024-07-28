@@ -23,13 +23,15 @@ from utilities.storage_service import StorageService
 
 @apply_tool_metadata
 class JupyterCodeTool(JupyterCodeExecutor):
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         # JupyterCodeExecutor Init
         self._timeout = 60
         self._kernel_name = "python3"
         self._output_dir = Path(".")
 
-        self._folder_path = (f"./mntcontainer/")
+        self._folder_path = f"./mntcontainer/"
         if not self._output_dir.exists():
             raise ValueError(f"Output directory {self._output_dir} does not exist.")
 
@@ -72,9 +74,8 @@ class JupyterCodeTool(JupyterCodeExecutor):
         """Save image data to a file."""
 
         image_url = self.storage_service.upload_image(
-            image_base64=image_data_base64,
-            image_name=f"{uuid.uuid4()}.png"
-            )
+            image_base64=image_data_base64, image_name=f"{uuid.uuid4()}.png"
+        )
 
         return f"![]({image_url})"
 

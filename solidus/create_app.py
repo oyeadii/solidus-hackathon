@@ -17,7 +17,6 @@ def create_app(title, lifespan, docs_url, redoc_url) -> FastAPI:
     # Create tables if they do not exist
     Base.metadata.create_all(bind=engine)
 
-    
     # Include routers to app
     include_routers(app)
 
