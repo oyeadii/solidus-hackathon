@@ -1,6 +1,6 @@
 import re
 import json
-import base64
+import uuid
 from pathlib import Path
 from typing import List
 from typing_extensions import override
@@ -18,6 +18,7 @@ from solidus.config import config
 from .client import CustomJupyterClient
 from ...core.register_tool import register_tool, apply_tool_metadata
 from .util import IPythonCodeResult, BEFORE_INJECTING_CODE, AFTER_INJECTING_CODE
+from utilities.storage_service import StorageService
 
 
 @apply_tool_metadata
@@ -56,6 +57,7 @@ class JupyterCodeTool(JupyterCodeExecutor):
             self._kernel_id
         )
         self.pattern = re.compile(r'XXXXXXXXX(.*?)XXXXXXXXX', re.DOTALL)
+        self.storage_service = StorageService()
 
     def _create_jupyter_server(self):
         return JupyterConnectionInfo(
@@ -68,9 +70,13 @@ class JupyterCodeTool(JupyterCodeExecutor):
     @override
     async def _save_image(self, image_data_base64: str) -> str:
         """Save image data to a file."""
-        # :TODO handle image file
-        # file_id, extension = await output_file_upload(**params)
-        # return str(file_id)
+
+        image_url = self.storage_service.upload_image(
+            image_base64=image_data_base64,
+            image_name=f"{uuid.uuid4()}.png"
+            )
+
+        return f"![]({image_url})"
 
     @override
     async def _save_html(self, html_data: str) -> str:
