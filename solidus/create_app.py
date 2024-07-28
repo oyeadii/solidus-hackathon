@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 
-from .config import config
 from .include_routers import include_routers
 from .app_middlewares import add_cors_middleware, add_log_middleware
 from .database import Base, engine

@@ -12,6 +12,7 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 import uuid
 import datetime
+
 from schemas.project import (
     CallResponse,
     ResultRequest,
@@ -19,7 +20,6 @@ from schemas.project import (
     StatsResponse,
     CallbackRequest,
 )
-from solidus.database import get_db
 from utilities.error_handler import handle_errors
 from tasks.code_executor import background_task
 from solidus.database import Task, get_db

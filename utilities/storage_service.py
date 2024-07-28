@@ -1,7 +1,6 @@
 import boto3
 import base64
 import mimetypes
-from PIL import Image
 from io import BytesIO
 from typing import Optional
 from fastapi import HTTPException
