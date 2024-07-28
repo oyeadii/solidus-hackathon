@@ -48,17 +48,9 @@ class JupyterCodeTool(JupyterCodeExecutor):
         if self._kernel_name not in available_kernels["kernelspecs"]:
             raise ValueError(f"Kernel {self._kernel_name} is not installed.")
 
-        kernel_id = self._get_kernel_id()
-        if kernel_id:
-            self._kernel_id = kernel_id
-        else:
-            self._kernel_id = self._jupyter_client.start_kernel(
-                self._kernel_name, self._folder_path
-            )
-            # self.cs_repo.update_from_dict(
-            #     conversation_id=self.conversation_id,
-            #     data={"kernel_id": self._kernel_id},
-            # )
+        self._kernel_id = self._jupyter_client.start_kernel(
+            self._kernel_name, self._folder_path
+        )
 
         self._jupyter_kernel_client = self._jupyter_client.get_kernel_client(
             self._kernel_id
@@ -66,18 +58,12 @@ class JupyterCodeTool(JupyterCodeExecutor):
         self.pattern = re.compile(r'XXXXXXXXX(.*?)XXXXXXXXX', re.DOTALL)
 
     def _create_jupyter_server(self):
-        # :TODO Need to add host and token for the user.
-        host, token = "", ""
         return JupyterConnectionInfo(
-            host=host,
-            use_https=config["code_interpreter"]["USE_HTTPS"],
-            port=config["code_interpreter"]["PORT"],
-            token=token,
+            host=config["PYTHON_HOST"],
+            use_https=config["PYTHON_USE_HTTPS"],
+            port=config["PYTHON_PORT"],
+            token=config["PYTHON_TOKEN"],
         )
-
-    def _get_kernel_id(self):
-        # :TODO Need to get kernel id from db
-        return self.cs_repo.get_kernel_id(conversation_id=self.conversation_id)
 
     @override
     async def _save_image(self, image_data_base64: str) -> str:

@@ -2,9 +2,6 @@ from pydantic import BaseModel
 from typing import Optional, Dict
 
 
-class CallRequest(BaseModel):
-    prompt: str
-
 class CallResponse(BaseModel):
     requestId: str
     traceId: str

@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, Header, Request, Depends, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Header, Request, Depends, UploadFile, File, BackgroundTasks, Form
 from fastapi.responses import JSONResponse
 import uuid
 import datetime
 from schemas.project import (
-    CallRequest,
     CallResponse,
     ResultRequest,
     ResultResponse,
@@ -21,8 +20,9 @@ router = APIRouter(prefix="", tags=["Solidus"])
 
 @router.post("/call")
 async def create_task(
-    request: CallRequest,
+    request: Request,
     background_tasks: BackgroundTasks,
+    prompt: str = Form(...),
     file: UploadFile = File(...),
     x_marketplace_token: str = Header(...),
     x_request_id: str = Header(...),
@@ -30,7 +30,7 @@ async def create_task(
     x_user_role: str = Header(...),
     db=Depends(get_db)
 ):
-    with handle_errors():
+    with handle_errors(request=request):
         trace_id = str(uuid.uuid4())
         task_id = str(uuid.uuid4())
         timestamp = datetime.datetime.utcnow().isoformat()
@@ -55,7 +55,7 @@ async def create_task(
             id=task_id,
             status=status,
             created_at=datetime.datetime.utcnow(),
-            prompt=request.prompt,
+            prompt=prompt,
             file_identifier=file_identifier,
             headers=headers
         )
@@ -63,7 +63,7 @@ async def create_task(
         db.commit()
 
         # Add the background task
-        background_tasks.add_task(background_task, task_id=task_id, file_location=file_location, db=db)
+        background_tasks.add_task(background_task, task_id=task_id, file_location=file_location, db=db, question=prompt)
 
         response = CallResponse(
             requestId=x_request_id,

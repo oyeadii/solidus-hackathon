@@ -163,3 +163,4 @@ test_config.py
 aaa.py
 
 .idea
+user_files/*
