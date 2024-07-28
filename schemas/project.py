@@ -17,6 +17,8 @@ class CallResponse(BaseModel):
 class ResultRequest(BaseModel):
     taskId: str
 
+class Result(BaseModel):
+    task_id: str
 
 class ResultResponse(BaseModel):
     apiVersion: str
