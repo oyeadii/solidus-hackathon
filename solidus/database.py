@@ -1,28 +1,37 @@
-import sqlite3
-from sqlite3 import Error
+import datetime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, JSON
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 
+DATABASE_URL = "sqlite:///./database.db"
+
+# Database setup with SQLAlchemy
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+class Task(Base):
+    __tablename__ = 'tasks'
+    id = Column(String, primary_key=True, index=True)
+    status = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    prompt = Column(String, index=True)
+    file_identifier = Column(String, unique=True, index=True)
+    headers = Column(JSON)
+    output = Column(String, index=True)
+    error = Column(String, index=True)
+
+class Statistics(Base):
+    __tablename__ = 'statistics'
+    id = Column(Integer, primary_key=True)
+    numRequestSuccess = Column(Integer, nullable=False, default=0)
+    numRequestFailed = Column(Integer, nullable=False, default=0)
+
+# Dependency to get DB session
 def get_db():
-    conn = None
+    db = SessionLocal()
     try:
-        conn = sqlite3.connect('database.db')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS tasks (
-                id TEXT PRIMARY KEY,
-                status TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                method TEXT NOT NULL,
-                payload TEXT NOT NULL
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS statistics (
-                id INTEGER PRIMARY KEY,
-                numRequestSuccess INTEGER NOT NULL,
-                numRequestFailed INTEGER NOT NULL
-            )
-        ''')
-        conn.execute('INSERT OR IGNORE INTO statistics (id, numRequestSuccess, numRequestFailed) VALUES (1, 0, 0)')
-    except Error as e:
-        print(e)
-    return conn
+        yield db
+    finally:
+        db.close()

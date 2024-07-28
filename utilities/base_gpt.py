@@ -87,7 +87,7 @@ class BaseGPT:
             )
         }\n\n"""
 
-    async def _make_openai_call(
+    async def _make_ai_call(
         self,
         messages: list,
         response_format=None,

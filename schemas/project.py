@@ -3,8 +3,7 @@ from typing import Optional, Dict
 
 
 class CallRequest(BaseModel):
-    method: str
-    payload: Dict
+    prompt: str
 
 class CallResponse(BaseModel):
     requestId: str

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Header, Request, Depends
+from fastapi import APIRouter, HTTPException, Header, Request, Depends, UploadFile, File, BackgroundTasks
 from fastapi.responses import JSONResponse
 import uuid
 import datetime
@@ -11,6 +11,9 @@ from schemas.project import (
     CallbackRequest,
 )
 from solidus.database import get_db
+from utilities.error_handler import handle_errors
+from tasks.code_executor import background_task
+from solidus.database import Task, get_db
 
 
 router = APIRouter(prefix="", tags=["Solidus"])
@@ -19,34 +22,54 @@ router = APIRouter(prefix="", tags=["Solidus"])
 @router.post("/call")
 async def create_task(
     request: CallRequest,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
     x_marketplace_token: str = Header(...),
     x_request_id: str = Header(...),
     x_user_id: str = Header(...),
     x_user_role: str = Header(...),
     db=Depends(get_db)
 ):
-    try:
+    with handle_errors():
         trace_id = str(uuid.uuid4())
         task_id = str(uuid.uuid4())
         timestamp = datetime.datetime.utcnow().isoformat()
+        file_identifier = f"{task_id}_{file.filename}"
+        status = "pending"
 
-        # Validate the request payload here
-        if not request.method or not request.payload:
-            raise HTTPException(status_code=400, detail="Invalid request payload")
+        # Save the uploaded file to the local directory
+        file_location = f"user_files/{file_identifier}"
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+
+        # Headers dictionary
+        headers = {
+            "x_marketplace_token": x_marketplace_token,
+            "x_request_id": x_request_id,
+            "x_user_id": x_user_id,
+            "x_user_role": x_user_role
+        }
 
         # Insert task into the database
-        cursor = db.cursor()
-        cursor.execute('''
-            INSERT INTO tasks (id, status, created_at, method, payload)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (task_id, 'pending', timestamp, request.method, str(request.payload)))
+        new_task = Task(
+            id=task_id,
+            status=status,
+            created_at=datetime.datetime.utcnow(),
+            prompt=request.prompt,
+            file_identifier=file_identifier,
+            headers=headers
+        )
+        db.add(new_task)
         db.commit()
+
+        # Add the background task
+        background_tasks.add_task(background_task, task_id=task_id, file_location=file_location, db=db)
 
         response = CallResponse(
             requestId=x_request_id,
             traceId=trace_id,
             apiVersion="1.0.1",
-            service="AudioCraft",
+            service="pl_analyzer",
             datetime=timestamp,
             isResponseImmediate=False,
             extraType="others",
@@ -55,8 +78,7 @@ async def create_task(
         )
 
         return response
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/result")
 async def get_result(
@@ -114,6 +136,7 @@ async def get_result(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/stats")
 async def get_stats(
     x_marketplace_token: str = Header(...),
@@ -144,6 +167,7 @@ async def get_stats(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/upload")
 async def upload_object(
     s3_key: str,
@@ -164,6 +188,7 @@ async def upload_object(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/download")
 async def download_object(
     s3_key: str,
@@ -183,6 +208,7 @@ async def download_object(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/delete")
 async def delete_object(
     s3_key: str,
@@ -196,6 +222,7 @@ async def delete_object(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/callback")
 async def process_callback(

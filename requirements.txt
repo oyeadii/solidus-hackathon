@@ -7,3 +7,4 @@ python-dotenv==0.21.1
 requests==2.31.0
 groq==0.9.0
 markdown-it-py==3.0.0
+pyautogen[jupyter-executor]==0.2.28
