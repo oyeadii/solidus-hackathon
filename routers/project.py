@@ -161,17 +161,18 @@ async def get_stats(
     db=Depends(get_db),
 ):
     try:
-        cursor = db.cursor()
-        cursor.execute('SELECT * FROM statistics WHERE id=1')
-        stats = cursor.fetchone()
+        
+        pending = len(db.query(Task).filter(Task.status == "pending").all())
+        completed = len(db.query(Task).filter(Task.status == "completed").all())
+        failed = len(db.query(Task).filter(Task.status == "failed").all())
 
         timestamp = datetime.datetime.utcnow().isoformat()
 
         response = StatsResponse(
-            apiVersion="1.0.1",
-            service="AudioCraft",
+            apiVersion="0.1.0",
+            service="P&L Analyser",
             datetime=timestamp,
-            response={"numRequestSuccess": stats[1], "numRequestFailed": stats[2]},
+            response={"numRequestSuccess": completed, "numRequestFailed": failed,"numRequestPending": pending},
             errorCode={"status": "AC_000", "reason": "success"},
         )
 
