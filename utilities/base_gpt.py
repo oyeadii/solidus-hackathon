@@ -1,8 +1,7 @@
 import json
 from solidus.config import config
 from tools.core.function_dispatcher import FunctionDispatcher
-from openai import AsyncOpenAI
-
+from groq import AsyncGroq
 
 class BaseGPT:
     def __init__(
@@ -13,7 +12,7 @@ class BaseGPT:
         self.temperature = 0
         self.api_key = config.get("API_KEY")
         self.model_name = config.get("MODEL_NAME")
-        self.client = AsyncOpenAI(api_key=self.api_key)
+        self.client = AsyncGroq(api_key=self.api_key)
 
         self.dispatcher = FunctionDispatcher(tool_instances=tool_instances)
 
