@@ -90,7 +90,7 @@ async def create_task(
             isResponseImmediate=False,
             extraType="others",
             response={"taskId": task_id},
-            errorCode={"status": "AC_001", "reason": "pending"},
+            errorCode={"status": "PL_001", "reason": "pending"},
         )
 
         return response
@@ -120,18 +120,18 @@ async def get_result(
         status = task.status
 
         if status == "pending":
-            error_code = {"status": "AC_001", "reason": "pending"}
+            error_code = {"status": "PL_001", "reason": "pending"}
             response_data = {"taskId": task_id}
         elif status == "in progress":
-            error_code = {"status": "AC_002", "reason": "in progress"}
+            error_code = {"status": "PL_002", "reason": "in progress"}
             response_data = {"taskId": task_id}
         elif status == "completed":
             # Placeholder for actual result data retrieval
             result_data = task.output
-            error_code = {"status": "AC_000", "reason": "success"}
-            response_data = {"dataType": "S3_OBJECT", "data": result_data}
+            error_code = {"status": "PL_000", "reason": "success"}
+            response_data = {"dataType": "METADATA", "data": result_data}
         elif status == "failed":
-            error_code = {"status": "AC_500", "reason": "failed"}
+            error_code = {"status": "PL_500", "reason": "failed"}
             response_data = {"taskId": task_id}
         else:
             raise HTTPException(status_code=500, detail="Unknown task status")
@@ -173,7 +173,7 @@ async def get_stats(
             service="P&L Analyser",
             datetime=timestamp,
             response={"numRequestSuccess": completed, "numRequestFailed": failed,"numRequestPending": pending},
-            errorCode={"status": "AC_000", "reason": "success"},
+            errorCode={"status": "PL_000", "reason": "success"},
         )
 
         return response
