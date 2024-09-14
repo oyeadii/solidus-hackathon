@@ -36,7 +36,7 @@ class BaseGPT:
             params["response_format"] = {"type": response_format}
         if functions:
             params["tools"] = functions
-            params["parallel_tool_calls"] = parallel_tool_calls
+            # params["parallel_tool_calls"] = parallel_tool_calls
         if function_call and is_main_call:
             params["tool_choice"] = function_call
         return params
