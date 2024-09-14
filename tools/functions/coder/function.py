@@ -208,10 +208,17 @@ class JupyterCodeTool(JupyterCodeExecutor):
             ]
         )
 
+        if isinstance(result.output_files, list):
+            # Ensure each element in the list is a dictionary
+            flat_list = [list(d.values())[0] for d in result.output_files if isinstance(d, dict)]
+        else:
+            # Handle cases where output_files is not a list (fallback)
+            flat_list = [result.output_files]
+
         metadata = [
             {
                 "code": code,
-                "output_files": [list(d.values())[0] for d in result["output_files"]],
+                "output_files": flat_list,
                 "output": f"\n\n<details>\n\n<summary>Analyzing...</summary>\n\n```python\n{code}\n```\n\n```output\n{result.output}\n```\n\n</details>\n\n",
                 "function_name": "python",
             }
