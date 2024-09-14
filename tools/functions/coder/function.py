@@ -72,11 +72,19 @@ class JupyterCodeTool(JupyterCodeExecutor):
     async def _save_image(self, image_data_base64: str) -> str:
         """Save image data to a file."""
 
-        image_url = self.storage_service.upload_image(
-            image_base64=image_data_base64, image_name=f"{uuid.uuid4()}.png"
-        )
+        file_name = f"{uuid.uuid4()}.png"
 
-        return f"![]({image_url})" 
+        presigned_url, key = self.storage_service.generate_presigned_upload_url(
+            file_name=file_name
+        )
+        self.storage_service.upload_image_from_base64(
+            presigned_url=presigned_url, 
+            base64_string=image_data_base64
+        )
+        image_url = self.storage_service.generate_presigned_download_url(
+            key=key
+        )
+        return image_url
 
     @override
     async def _save_html(self, html_data: str) -> str:
@@ -145,20 +153,15 @@ class JupyterCodeTool(JupyterCodeExecutor):
                             path = await self._save_image(data.data)
                             outputs.append("File Created Successfully!!")
 
-                            if plot_json_data is None or plot_json_index >= len(
-                                plot_json_data
-                            ):
-                                plot_json_data = (
-                                    await self.generate_and_return_plot_json(code=code)
-                                )
-                                plot_json_index = 0
+                            # if plot_json_data is None or plot_json_index >= len(
+                            #     plot_json_data
+                            # ):
+                            #     plot_json_data = (
+                            #         await self.generate_and_return_plot_json(code=code)
+                            #     )
+                            #     plot_json_index = 0
 
-                            output_files.append(
-                                {
-                                    "file_id": path,
-                                    "file_data": plot_json_data[plot_json_index],
-                                }
-                            )
+                            output_files.append(path)
                             plot_json_index += 1
 
                         elif data.mime_type == "text/html":

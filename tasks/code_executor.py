@@ -23,6 +23,7 @@ async def background_task(task_id: str, file_location: str, db: Session, questio
         )
 
         output = ""
+        image_urls = []
         base_gpt_helper = BaseGPT(tool_instances=tool_instances)
         print(f"Message Sent!!")
         async for result in base_gpt_helper._make_ai_call(
@@ -38,9 +39,16 @@ async def background_task(task_id: str, file_location: str, db: Session, questio
                     output += str(chunk["content"])
                 else:
                     output = str(chunk["content"])
+            elif chunk["type"] == "metadata":
+                metadata = chunk["content"]
+                for mt in metadata:
+                    if mt["output_files"]:
+                        image_urls.extend(mt["output_files"])
+
 
         print(f"Output Recieved!!")
         task.output = output
+        task.files = image_urls
         task.status = "completed"
         db.commit()
         print(f"Finished.")

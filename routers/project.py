@@ -128,8 +128,17 @@ async def get_result(
         elif status == "completed":
             # Placeholder for actual result data retrieval
             result_data = task.output
+            image_urls = task.files
+            
+            if image_urls:
+                text_data = [{"type": "METADATA", "data": result_data}]
+                image_urls_data = [{"type": "S3_OBJECT", "data": result} for result in image_urls]
+                response_data = {
+                    "dataType": "HYBRID",
+                    "data": text_data + image_urls_data,}
+            else:
+                response_data = {"dataType": "METADATA", "data": result_data}
             error_code = {"status": "PL_000", "reason": "success"}
-            response_data = {"dataType": "METADATA", "data": result_data}
         elif status == "failed":
             error_code = {"status": "PL_500", "reason": "failed"}
             response_data = {"taskId": task_id}
