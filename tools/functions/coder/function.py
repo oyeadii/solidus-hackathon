@@ -161,7 +161,7 @@ class JupyterCodeTool(JupyterCodeExecutor):
                             #     )
                             #     plot_json_index = 0
 
-                            output_files.append(path)
+                            output_files.append({"url": path})
                             plot_json_index += 1
 
                         elif data.mime_type == "text/html":
@@ -211,7 +211,7 @@ class JupyterCodeTool(JupyterCodeExecutor):
         metadata = [
             {
                 "code": code,
-                "output_files": result.output_files,
+                "output_files": [list(d.values())[0] for d in result["output_files"]],
                 "output": f"\n\n<details>\n\n<summary>Analyzing...</summary>\n\n```python\n{code}\n```\n\n```output\n{result.output}\n```\n\n</details>\n\n",
                 "function_name": "python",
             }
