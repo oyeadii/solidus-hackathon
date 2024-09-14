@@ -131,8 +131,8 @@ async def get_result(
             image_urls = task.files
             
             if image_urls:
-                text_data = [{"type": "METADATA", "data": result_data}]
-                image_urls_data = [{"type": "S3_OBJECT", "data": result} for result in image_urls]
+                text_data = [{"dataType": "METADATA", "data": result_data}]
+                image_urls_data = [{"dataType": "S3_OBJECT", "data": result} for result in image_urls]
                 response_data = {
                     "dataType": "HYBRID",
                     "data": text_data + image_urls_data,}
