@@ -22,7 +22,7 @@ class Task(Base):
     headers = Column(JSON)
     output = Column(String, index=True)
     error = Column(String, index=True)
-    files = Column(ARRAY(String))
+    files = Column(JSON)
 
 
 class Statistics(Base):
