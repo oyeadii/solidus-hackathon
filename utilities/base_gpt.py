@@ -10,9 +10,14 @@ class BaseGPT:
     ):
         self.buffer = ""
         self.temperature = 0
+        # For running GPT-4o Funtionality 
         self.api_key = config.get("API_KEY")
         self.model_name = config.get("MODEL_NAME")
-        self.client = AsyncOpenAI(api_key=self.api_key,base_url=config.get("BASE_URL"))
+        self.client = AsyncOpenAI(api_key=self.api_key)
+        # For running Sambanova Functionality
+        # self.api_key = config.get("SAMBANOVA_API_KEY")
+        # self.model_name = config.get("SAMBANOVA_MODEL_NAME")
+        # self.client = AsyncOpenAI(api_key=self.api_key,base_url=config.get("BASE_URL"))
 
         self.dispatcher = FunctionDispatcher(tool_instances=tool_instances)
 
@@ -36,7 +41,7 @@ class BaseGPT:
             params["response_format"] = {"type": response_format}
         if functions:
             params["tools"] = functions
-            # params["parallel_tool_calls"] = parallel_tool_calls
+            params["parallel_tool_calls"] = parallel_tool_calls
         if function_call and is_main_call:
             params["tool_choice"] = function_call
         return params
