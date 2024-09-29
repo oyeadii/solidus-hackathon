@@ -1,67 +1,59 @@
-import boto3
 import base64
-import mimetypes
-from io import BytesIO
-from typing import Optional
-from fastapi import HTTPException
-from botocore.exceptions import NoCredentialsError, PartialCredentialsError
+import requests
 
-from solidus.config import config
+from solidus.config import config    
 
 
 class StorageService:
     def __init__(self):
-        self.aws_access_key_id = config.get('AWS_ACCESS_KEY_ID')
-        self.aws_secret_access_key = config.get('AWS_SECRET_ACCESS_KEY')
-        self.aws_region_name = config.get('AWS_REGION_NAME')
-        self.aws_storage_bucket_name = config.get('AWS_STORAGE_BUCKET_NAME')
+        self.download_base_url = 'https://mkpl-user.dev.devsaitech.com/api/v1/ai-resource/presigned-download'
+        self.upload_base_url = 'https://mkpl-user.dev.devsaitech.com/api/v1/ai-resource/presigned-upload'
+        self.headers = {
+            'accept': 'application/json',
+            'x-publisher-key': config.get("PUBLISHER_KEY"),
+            'Content-Type': 'application/json'
+        }
 
-        self.s3_client = boto3.client(
-            's3',
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
-            region_name=self.aws_region_name,
-        )
-
-    def upload_image(
-        self,
-        image_base64: str,
-        image_name: str,
-        folder: Optional[str] = 'uploaded_images/',
-    ) -> str:
-        """
-        Uploads an image to an S3 bucket and returns the URL of the uploaded image.
-
-        :param image_base64: The base64-encoded image string to be uploaded.
-        :param image_name: The name of the image file.
-        :param folder: The folder in the S3 bucket where the image will be stored.
-        :return: The URL of the uploaded image.
-        """
+    def generate_presigned_upload_url(self, file_name):
+        data = {
+            "s3Key": file_name
+        }
         try:
-            # Decode the base64 string
-            image_data = base64.b64decode(image_base64)
-
-            # Determine content type
-            content_type, _ = mimetypes.guess_type(image_name)
-            if content_type is None or not content_type.startswith("image/"):
-                raise ValueError("File type not supported. Please upload an image.")
-
-            # Define the S3 file path
-            s3_file_path = folder + image_name
-
-            # Upload the image to S3
-            self.s3_client.upload_fileobj(
-                BytesIO(image_data),
-                self.aws_storage_bucket_name,
-                s3_file_path,
-                ExtraArgs={'ContentType': content_type},
-            )
-
-            # Generate the file URL
-            file_url = f"https://{self.aws_storage_bucket_name}.s3.amazonaws.com/{s3_file_path}"
-            return file_url
-
-        except (NoCredentialsError, PartialCredentialsError) as e:
-            raise HTTPException(status_code=500, detail=f"Credentials error: {str(e)}")
+            response = requests.post(self.upload_base_url, json=data, headers=self.headers)
+            if response.status_code == 201:
+                response_data = response.json()
+                presigned_url = response_data['data']['presignedUrl']
+                key = response_data['data']['key']
+                return presigned_url, key
+            else:
+                print(f"Request failed. Status code: {response.status_code}")
+                return None, None
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+            print(f"An error occurred while generating the upload URL: {e}")
+            return None, None
+
+    def upload_image_from_base64(self, presigned_url, base64_string):
+            try:
+                file_data = base64.b64decode(base64_string)
+                response = requests.put(presigned_url, data=file_data)
+
+                if response.status_code == 200:
+                    print("File uploaded successfully.")
+                else:
+                    print(f"Failed to upload file. Status code: {response.status_code}")
+                    print(f"Response: {response.text}")
+            except Exception as e:
+                print(f"An error occurred while uploading the file: {e}")
+    
+    def generate_presigned_download_url(self, key):
+        params = {
+            's3Key': key,
+        }
+        try:
+            response = requests.get(self.download_base_url, headers=self.headers, params=params)
+            response_data = response.json()
+            presigned_url = response_data.get('data', {}).get('url')
+            return presigned_url
+        except Exception as e:
+            print(f"An error occurred while generating the download URL: {e}")
+            return None

@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, JSON
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, JSON, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -22,6 +22,7 @@ class Task(Base):
     headers = Column(JSON)
     output = Column(String, index=True)
     error = Column(String, index=True)
+    files = Column(JSON)
 
 
 class Statistics(Base):

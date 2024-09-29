@@ -4,7 +4,6 @@ from tools.core.function_dispatcher import FunctionDispatcher
 from openai import AsyncOpenAI
 from groq import AsyncGroq
 
-
 class BaseGPT:
     def __init__(
         self,

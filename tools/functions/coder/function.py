@@ -72,11 +72,19 @@ class JupyterCodeTool(JupyterCodeExecutor):
     async def _save_image(self, image_data_base64: str) -> str:
         """Save image data to a file."""
 
-        image_url = self.storage_service.upload_image(
-            image_base64=image_data_base64, image_name=f"{uuid.uuid4()}.png"
-        )
+        file_name = f"{uuid.uuid4()}.png"
 
-        return f"![]({image_url})"
+        presigned_url, key = self.storage_service.generate_presigned_upload_url(
+            file_name=file_name
+        )
+        self.storage_service.upload_image_from_base64(
+            presigned_url=presigned_url, 
+            base64_string=image_data_base64
+        )
+        image_url = self.storage_service.generate_presigned_download_url(
+            key=key
+        )
+        return image_url
 
     @override
     async def _save_html(self, html_data: str) -> str:
@@ -145,20 +153,15 @@ class JupyterCodeTool(JupyterCodeExecutor):
                             path = await self._save_image(data.data)
                             outputs.append("File Created Successfully!!")
 
-                            if plot_json_data is None or plot_json_index >= len(
-                                plot_json_data
-                            ):
-                                plot_json_data = (
-                                    await self.generate_and_return_plot_json(code=code)
-                                )
-                                plot_json_index = 0
+                            # if plot_json_data is None or plot_json_index >= len(
+                            #     plot_json_data
+                            # ):
+                            #     plot_json_data = (
+                            #         await self.generate_and_return_plot_json(code=code)
+                            #     )
+                            #     plot_json_index = 0
 
-                            output_files.append(
-                                {
-                                    "file_id": path,
-                                    "file_data": plot_json_data[plot_json_index],
-                                }
-                            )
+                            output_files.append({"url": path})
                             plot_json_index += 1
 
                         elif data.mime_type == "text/html":
@@ -205,10 +208,17 @@ class JupyterCodeTool(JupyterCodeExecutor):
             ]
         )
 
+        if isinstance(result.output_files, list):
+            # Ensure each element in the list is a dictionary
+            flat_list = [list(d.values())[0] for d in result.output_files if isinstance(d, dict)]
+        else:
+            # Handle cases where output_files is not a list (fallback)
+            flat_list = [result.output_files]
+
         metadata = [
             {
                 "code": code,
-                "output_files": result.output_files,
+                "output_files": flat_list,
                 "output": f"\n\n<details>\n\n<summary>Analyzing...</summary>\n\n```python\n{code}\n```\n\n```output\n{result.output}\n```\n\n</details>\n\n",
                 "function_name": "python",
             }
