@@ -152,11 +152,12 @@ class BaseGPT:
         }
         content, metadata = await self.dispatcher.dispatch(**dispatcher_params)
         result = {
-            "tool_call_id": function_call["id"],
-            "role": "assistant",
-            "name": function_call["function"]["name"],
+            # "tool_call_id": function_call["id"],
+            "role": "ipython",
+            # "name": function_call["function"]["name"],
             "content": str(content),
         }
+        # result= str(content)
         return result, metadata
 
     def _format_response(self, buffer, current_chunk, is_changed, type="response"):
@@ -205,8 +206,8 @@ class BaseGPT:
             if function_call_detected:
                 messages.append(
                     {
-                        "message": function_call_detected,
-                        "role": 'user',
+                        "content": function_call_detected,
+                        "role": 'assistant',
                     }
                 )
 
@@ -216,7 +217,7 @@ class BaseGPT:
                         function_metadata,
                     ) = await self._handle_function_call(tool_call)
                     messages.append(function_result)
-                    print('function_result\n', function_result)
+                    print(messages,"\nmessages\n")
 
                     if function_metadata[0]["function_name"] == "python":
                         self.buffer += function_metadata[0]["output"]
